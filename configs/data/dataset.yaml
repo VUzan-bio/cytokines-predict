@@ -1,0 +1,20 @@
+dataset:
+  name: cytokine_dictionary
+  geo_accession: "GSE000000"
+  sra_table: "sra_metadata.csv"
+  local_raw_path: "data/raw"
+  local_processed_path: "data/processed"
+  references_path: "data/references"
+  cell_metadata_fields:
+    - donor_id
+    - cytokine_type
+    - concentration
+    - stimulation_duration
+    - cell_type
+  gene_id_column: feature_name
+  cell_id_column: cell_barcode
+  cite_seq_antibodies: []
+download:
+  chunk_size: 262144  # bytes per streaming chunk
+  max_records: null  # set to an integer to cap for testing
+  timeout: 30

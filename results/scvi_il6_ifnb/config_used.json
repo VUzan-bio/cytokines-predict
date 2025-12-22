@@ -1,0 +1,33 @@
+{
+  "model": {
+    "n_latent": 20,
+    "n_hidden": 128,
+    "n_layers": 2,
+    "dropout_rate": 0.1,
+    "dispersion": "gene-batch"
+  },
+  "training": {
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 256,
+    "max_epochs": 100,
+    "patience": 20,
+    "kl_warmup_epochs": 40,
+    "train_size": 0.8,
+    "validation_size": 0.1
+  },
+  "data": {
+    "hvg_genes": 2000,
+    "mito_prefix": "MT-",
+    "min_genes": 500,
+    "max_genes": 7500,
+    "max_mito": 0.15,
+    "doublet_score_threshold": 0.25,
+    "donor_key": "donor_id",
+    "cytokine_keys": {
+      "type": "cytokine_type",
+      "concentration": "concentration",
+      "duration": "stimulation_duration"
+    }
+  }
+}

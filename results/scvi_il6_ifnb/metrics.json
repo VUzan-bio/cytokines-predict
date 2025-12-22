@@ -1,0 +1,8 @@
+{
+  "cytokine_silhouette": 0.005103209987282753,
+  "ari": null,
+  "nmi": null,
+  "batch_entropy": 1.5341676634296637,
+  "reconstruction_error": -966.6664432322485,
+  "expression_recovery": 0.3422688464051
+}
