@@ -37,6 +37,11 @@ Pipeline to build a cytokine response dictionary using scVI as the sole modeling
 - Peak memory: ~8 GB during preprocessing and HVG selection; scVI training fits comfortably on CPU with batch size 256.
 - Disk: raw downloads dominate; processed AnnData objects and checkpoints live in `models/checkpoints` and `data/processed`.
 
+## Limitations and next steps
+- Current runs in this environment use a small panel of GSE202186 GSMs (IL-6/IFN-β) and a single `cell_type="unknown"` placeholder; richer, cell-type–resolved vectors need curated labels.
+- Memory limits here prevent loading the full SCP matrix or all GSMs; adding more cytokines (e.g., PBS controls, IFN-α/γ, TNF-α) will require more RAM or preprocessing on a larger machine.
+- Best path: preprocess/downsample additional GSMs elsewhere, produce a compact H5AD (`scp_cytokine_with_scvi.h5ad`) plus `models/scvi_scp_cytokine/`, then rerun the cytokine-vector pipeline with higher `--min_cells`.
+
 ## Configuration
 - Model/training defaults live in `configs/model/scvi.yaml`.
 - Dataset metadata in `configs/data/dataset.yaml` (GEO accession, columns, streaming settings).
