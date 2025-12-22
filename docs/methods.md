@@ -34,3 +34,9 @@
 - Latent traversal: interpolate between control and stimulated centroids to map response trajectories.
 - Gene loadings: correlation-based ranking of genes per latent dimension (top 15).
 - Pseudotime: Euclidean distance from control centroid in latent space as cytokine response intensity.
+
+## Virtual cytokine perturbations
+- **Cytokine vectors:** For each `(cell_type, donor)` stratum (or global if labels are unknown), compute mean `X_scvi` for source (e.g., IFN-β) and target (e.g., IL-6), and take the difference `v = μ_target - μ_source`.
+- **Counterfactual generation:** Add `v` to each source-cell latent vector, decode with the scVI decoder (`get_normalized_expression`) to obtain virtual target-cytokine expression; annotate `obs` with `cytokine_type_real`, `cytokine_type_virtual`, `is_counterfactual=True`.
+- **Linearity assessment:** Compare real target vs. virtual target per gene: mean_real vs. mean_virtual, log2 fold change, optional per-gene Pearson correlation. Pathway-level linearity = fraction of genes with |logFC| below a small threshold.
+- **Nonlinear targets:** Genes with large |logFC_virtual_vs_real| are flagged as nonlinear/context-specific; summarized per cell type where available.
