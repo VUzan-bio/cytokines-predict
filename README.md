@@ -1,6 +1,6 @@
 # A single-cell cytokine dictionary of human peripheral blood (scVI-only)
 
-Laptop-friendly, reproducible pipeline for building a cytokine response dictionary using scVI as the sole modeling backbone.
+Pipeline to build a cytokine response dictionary using scVI as the sole modeling backbone.
 
 ## Quickstart
 - Create a Python 3.10+ environment.
