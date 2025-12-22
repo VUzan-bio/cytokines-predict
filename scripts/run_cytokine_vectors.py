@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from src.celltyping.annotate import annotate_cell_types
+from src.celltyping.plots import plot_cell_type_counts, plot_cell_type_umap
 from src.cytokine_vectors.counterfactuals import (
     generate_counterfactuals,
     merge_real_and_virtual,
@@ -63,23 +65,30 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--adata_path",
-        default="results/scvi_il6_ifnb/adata_with_scvi.h5ad",
+        default="data/processed/scp_cytokine_with_scvi.h5ad",
         help="Path to AnnData with X_scvi",
     )
     parser.add_argument(
         "--model_dir",
-        default="results/scvi_il6_ifnb/model",
+        default="models/scvi_scp_cytokine",
         help="Directory containing trained scVI model",
     )
     parser.add_argument(
         "--output_dir",
-        default="results/cytokine_vectors",
+        default="results/scp_cytokine_vectors",
         help="Directory for outputs",
     )
-    parser.add_argument("--min_cells", type=int, default=100)
+    parser.add_argument("--min_cells", type=int, default=50)
     parser.add_argument("--max_cells_per_stratum", type=int, default=5000)
     parser.add_argument("--source_cytokine", default="IFN-beta")
     parser.add_argument("--target_cytokine", default="IL-6")
+    parser.add_argument(
+        "--annotate_cell_types",
+        action="store_true",
+        help="Run marker-based cell type annotation before vectors",
+    )
+    parser.add_argument("--celltype_method", default="marker_score")
+    parser.add_argument("--skip_plots", action="store_true", help="Skip plotting to avoid backend issues")
     return parser.parse_args()
 
 
@@ -91,7 +100,28 @@ def main() -> None:
     adata = load_adata(args.adata_path)
     model = load_scvi_model(args.model_dir, adata)
 
-    vectors = compute_cytokine_vectors(adata, min_cells=args.min_cells)
+    # Cell type annotation if requested or missing
+    if args.annotate_cell_types or ("cell_type" not in adata.obs) or (
+        adata.obs["cell_type"].nunique() <= 1
+    ):
+        adata = annotate_cell_types(
+            adata,
+            method=args.celltype_method,
+            min_score_diff=0.1,
+            unknown_label="unknown",
+            overwrite=True,
+        )
+        annotated_path = output_dir / "adata_with_celltypes.h5ad"
+        adata.write(annotated_path)
+        try:
+            plot_cell_type_counts(adata, str(output_dir / "cell_type_counts.png"))
+            plot_cell_type_umap(adata, str(output_dir / "cell_type_umap.png"))
+        except Exception as plot_err:
+            print(f"Skipping cell type QC plots due to error: {plot_err}")
+
+    vectors = compute_cytokine_vectors(
+        adata, min_cells=args.min_cells, source_cytokine=args.source_cytokine, target_cytokine=args.target_cytokine
+    )
     vectors_path = output_dir / "cytokine_vectors.json"
     save_cytokine_vectors(vectors, vectors_path)
 
@@ -115,14 +145,15 @@ def main() -> None:
     merged.write(merged_path)
 
     # Plot latent overlay
-    try:
-        plot_latent_overlay(
-            adata_real=adata,
-            adata_virtual=adata_virtual,
-            output_path=str(output_dir / "latent_real_vs_counterfactual.png"),
-        )
-    except Exception as plot_err:
-        print(f"Skipping latent overlay plot due to error: {plot_err}")
+    if not args.skip_plots:
+        try:
+            plot_latent_overlay(
+                adata_real=adata,
+                adata_virtual=adata_virtual,
+                output_path=str(output_dir / "latent_real_vs_counterfactual.png"),
+            )
+        except Exception as plot_err:
+            print(f"Skipping latent overlay plot due to error: {plot_err}")
 
     pathway_db = _default_pathways()
     pathway_heatmap_input = {}
@@ -151,21 +182,22 @@ def main() -> None:
         nonlinear_path = output_dir / f"nonlinear_genes_{cell_type}.csv"
         nonlinear.to_csv(nonlinear_path, index=False)
 
-        try:
-            plot_gene_scatter(
-                gene_stats,
-                output_path=str(output_dir / f"gene_scatter_{cell_type}.png"),
-                nonlinear_genes=nonlinear["gene"].head(20).tolist(),
-            )
-        except Exception as plot_err:
-            print(f"Skipping gene scatter plot for {cell_type}: {plot_err}")
-        try:
-            plot_pathway_bars(
-                pathway_stats,
-                output_path=str(output_dir / f"pathway_{cell_type}.png"),
-            )
-        except Exception as plot_err:
-            print(f"Skipping pathway plot for {cell_type}: {plot_err}")
+        if not args.skip_plots:
+            try:
+                plot_gene_scatter(
+                    gene_stats,
+                    output_path=str(output_dir / f"gene_scatter_{cell_type}.png"),
+                    nonlinear_genes=nonlinear["gene"].head(20).tolist(),
+                )
+            except Exception as plot_err:
+                print(f"Skipping gene scatter plot for {cell_type}: {plot_err}")
+            try:
+                plot_pathway_bars(
+                    pathway_stats,
+                    output_path=str(output_dir / f"pathway_{cell_type}.png"),
+                )
+            except Exception as plot_err:
+                print(f"Skipping pathway plot for {cell_type}: {plot_err}")
 
         summary["cell_types"].append(
             {
@@ -175,13 +207,14 @@ def main() -> None:
             }
         )
 
-    try:
-        plot_pathway_heatmap(
-            pathway_heatmap_input,
-            output_path=str(output_dir / "pathway_heatmap.png"),
-        )
-    except Exception as plot_err:
-        print(f"Skipping pathway heatmap: {plot_err}")
+    if not args.skip_plots:
+        try:
+            plot_pathway_heatmap(
+                pathway_heatmap_input,
+                output_path=str(output_dir / "pathway_heatmap.png"),
+            )
+        except Exception as plot_err:
+            print(f"Skipping pathway heatmap: {plot_err}")
 
     summary_path = output_dir / "summary.json"
     with open(summary_path, "w", encoding="utf-8") as f:

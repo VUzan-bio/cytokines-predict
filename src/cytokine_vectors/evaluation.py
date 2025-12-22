@@ -13,6 +13,7 @@ def compute_gene_level_agreement(
     adata_virtual: anndata.AnnData,
     cell_type: str,
     target_cytokine: str = "IL-6",
+    eps: float = 1e-6,
 ) -> pd.DataFrame:
     """Compare real vs virtual expression per gene for a cell type."""
     real_mask = (adata_real.obs.get("cell_type") == cell_type) & (
@@ -28,7 +29,7 @@ def compute_gene_level_agreement(
 
     real_mean = np.asarray(real.X.mean(axis=0)).ravel()
     virt_mean = np.asarray(virt.X.mean(axis=0)).ravel()
-    logfc = np.log1p(virt_mean) - np.log1p(real_mean)
+    logfc = np.log2((virt_mean + eps) / (real_mean + eps))
 
     # Optional correlation if same number of cells
     corr_values = []
@@ -88,3 +89,24 @@ def identify_nonlinear_genes(
     """Genes with large discrepancies between virtual and real."""
     mask = np.abs(gene_stats["logFC_virtual_vs_real"]) > abs_logfc_threshold
     return gene_stats[mask].sort_values("logFC_virtual_vs_real", key=np.abs, ascending=False)
+
+
+def compute_gene_level_agreement_for_all_cell_types(
+    adata_real: anndata.AnnData,
+    adata_virtual: anndata.AnnData,
+    cell_types: list,
+    target_cytokine: str,
+) -> dict:
+    """Compute gene-level stats for each cell type."""
+    results = {}
+    for ct in cell_types:
+        try:
+            results[ct] = compute_gene_level_agreement(
+                adata_real=adata_real,
+                adata_virtual=adata_virtual,
+                cell_type=ct,
+                target_cytokine=target_cytokine,
+            )
+        except Exception:
+            results[ct] = None
+    return results

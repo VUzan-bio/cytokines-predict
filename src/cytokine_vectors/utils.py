@@ -185,6 +185,9 @@ def load_adata(path: str) -> anndata.AnnData:
             # Fall back to placeholder to allow downstream processing
             adata.obs[col] = "unknown"
         adata.obs[col] = adata.obs[col].astype(str)
+        adata.obs[col] = adata.obs[col].astype("category")
+    if "cell_type" not in adata.obs:
+        adata.obs["cell_type"] = "unknown"
 
     return adata
 
@@ -222,7 +225,10 @@ def _count_by_stratum(adata: anndata.AnnData) -> pd.DataFrame:
 
 
 def get_valid_strata(
-    adata: anndata.AnnData, min_cells: int = 100
+    adata: anndata.AnnData,
+    min_cells: int = 50,
+    source_cytokine: str = "IFN-beta",
+    target_cytokine: str = "IL-6",
 ) -> pd.DataFrame:
     """Strata with at least min_cells per cytokine."""
     if "cell_type" not in adata.obs:
@@ -235,7 +241,7 @@ def get_valid_strata(
         fill_value=0,
     )
     pivot = pivot.rename_axis(None, axis=1).reset_index()
-    pivot["n_ifn"] = pivot.get("IFN-beta", 0)
-    pivot["n_il6"] = pivot.get("IL-6", 0)
-    valid = pivot[(pivot["n_ifn"] >= min_cells) & (pivot["n_il6"] >= min_cells)]
-    return valid[["cell_type", "donor_id", "n_ifn", "n_il6"]]
+    pivot["n_source"] = pivot.get(source_cytokine, 0)
+    pivot["n_target"] = pivot.get(target_cytokine, 0)
+    valid = pivot[(pivot["n_source"] >= min_cells) & (pivot["n_target"] >= min_cells)]
+    return valid.rename(columns={"n_source": f"n_{source_cytokine}", "n_target": f"n_{target_cytokine}"}).reset_index(drop=True)

@@ -39,16 +39,18 @@ class CytokineVector:
 
 
 def compute_cytokine_vectors(
-    adata: anndata.AnnData, min_cells: int = 100
+    adata: anndata.AnnData,
+    min_cells: int = 50,
+    source_cytokine: str = "IFN-beta",
+    target_cytokine: str = "IL-6",
 ) -> List[CytokineVector]:
-    """Compute IL-6 vs IFN-beta latent vectors per (cell_type, donor_id).
-
-    Falls back to a single global vector if no donor-level strata qualify.
-    """
+    """Compute cytokine latent vectors per (cell_type, donor_id)."""
     if "X_scvi" not in adata.obsm:
         raise ValueError("adata.obsm['X_scvi'] is required")
 
-    valid = get_valid_strata(adata, min_cells=min_cells)
+    valid = get_valid_strata(
+        adata, min_cells=min_cells, source_cytokine=source_cytokine, target_cytokine=target_cytokine
+    )
     vectors: List[CytokineVector] = []
 
     for _, row in valid.iterrows():
@@ -60,8 +62,8 @@ def compute_cytokine_vectors(
         )
         stratum = adata[mask_stratum]
 
-        mask_ifn = stratum.obs["cytokine_type"] == "IFN-beta"
-        mask_il6 = stratum.obs["cytokine_type"] == "IL-6"
+        mask_ifn = stratum.obs["cytokine_type"] == source_cytokine
+        mask_il6 = stratum.obs["cytokine_type"] == target_cytokine
 
         z_ifn = np.asarray(stratum.obsm["X_scvi"][mask_ifn])
         z_il6 = np.asarray(stratum.obsm["X_scvi"][mask_il6])
@@ -89,8 +91,8 @@ def compute_cytokine_vectors(
 
     # Fallback: global vector if nothing passed the filter
     if not vectors:
-        mask_ifn = adata.obs["cytokine_type"] == "IFN-beta"
-        mask_il6 = adata.obs["cytokine_type"] == "IL-6"
+        mask_ifn = adata.obs["cytokine_type"] == source_cytokine
+        mask_il6 = adata.obs["cytokine_type"] == target_cytokine
         z_ifn = np.asarray(adata.obsm["X_scvi"][mask_ifn])
         z_il6 = np.asarray(adata.obsm["X_scvi"][mask_il6])
         if z_ifn.size == 0 or z_il6.size == 0:
