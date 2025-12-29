@@ -102,6 +102,7 @@ def generate_counterfactuals(
         var=adata.var.copy(),
         dtype=expr.dtype,
     )
+    adata_virtual.layers["normalized"] = expr
     adata_virtual.obsm["X_scvi"] = latent
     return adata_virtual
 

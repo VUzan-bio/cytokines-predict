@@ -40,7 +40,7 @@ class CytokineSCVI(scvi.model.SCVI):
     def setup_anndata(cls, adata, **kwargs):
         categorical_covariate_keys = kwargs.get(
             "categorical_covariate_keys",
-            ["cytokine_type", "concentration", "stimulation_duration"],
+            ["cytokine_type", "cytokine_concentration", "stimulation_duration"],
         )
         batch_key = kwargs.get("batch_key", "donor_id")
 

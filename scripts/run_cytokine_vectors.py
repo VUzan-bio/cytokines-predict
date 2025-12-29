@@ -37,24 +37,27 @@ from src.cytokine_vectors.vectors import (
 
 def _default_pathways() -> dict:
     return {
-        "IL6_JAK_STAT": [
-            "STAT1",
-            "STAT3",
-            "SOCS1",
-            "SOCS3",
-            "JAK1",
-            "JAK2",
-            "IL6ST",
+        "IL6_JAK_STAT_MOUSE": [
+            "Stat1",
+            "Stat3",
+            "Socs1",
+            "Socs3",
+            "Jak1",
+            "Jak2",
+            "Il6st",
+            "Il6r",
         ],
-        "IFN_beta_ISG": [
-            "IFI44L",
-            "IFI44",
-            "IFIT1",
-            "IFIT3",
-            "MX1",
-            "ISG15",
-            "OAS1",
-            "OAS2",
+        "IFN_BETA_ISG_MOUSE": [
+            "Ifi27l2a",
+            "Ifi44",
+            "Ifit1",
+            "Ifit2",
+            "Ifit3",
+            "Isg15",
+            "Mx1",
+            "Oas1a",
+            "Oas2",
+            "Rsad2",
         ],
     }
 

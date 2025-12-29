@@ -63,4 +63,6 @@ def test_compute_vectors_and_counterfactuals():
     )
     assert adata_virtual.n_obs > 0
     assert "is_counterfactual" in adata_virtual.obs
+    assert "cytokine_type_virtual" in adata_virtual.obs
+    assert (adata_virtual.var_names == adata.var_names).all()
     assert adata_virtual.obsm["X_scvi"].shape[0] == adata_virtual.n_obs

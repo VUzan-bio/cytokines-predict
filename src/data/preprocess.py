@@ -86,14 +86,16 @@ def encode_cytokine_metadata(
     elif not isinstance(cytokine_key_map, dict):
         cytokine_key_map = {
             "cytokine_type": "cytokine_type",
-            "concentration": "concentration",
+            "cytokine_concentration": "cytokine_concentration",
             "stimulation_duration": "stimulation_duration",
         }
     defaults = {
         "cytokine_type": "unknown",
-        "concentration": "unknown",
+        "cytokine_concentration": "unknown",
         "stimulation_duration": "unknown",
     }
+    if "cytokine_concentration" not in adata.obs and "concentration" in adata.obs:
+        adata.obs["cytokine_concentration"] = adata.obs["concentration"]
     for target, source in cytokine_key_map.items():
         if source in adata.obs:
             adata.obs[target] = adata.obs[source].astype("category")
@@ -138,7 +140,15 @@ def preprocess_for_scvi(adata: AnnData, config) -> AnnData:
     """Full preprocessing chain to ready AnnData for scVI."""
     data_cfg = getattr(config, "data", config)
     training_cfg = getattr(config, "training", None)
-    cytokine_key_map = getattr(data_cfg, "cytokine_keys", {"cytokine_type": "cytokine_type", "concentration": "concentration", "stimulation_duration": "stimulation_duration"})
+    cytokine_key_map = getattr(
+        data_cfg,
+        "cytokine_keys",
+        {
+            "cytokine_type": "cytokine_type",
+            "cytokine_concentration": "cytokine_concentration",
+            "stimulation_duration": "stimulation_duration",
+        },
+    )
     if hasattr(cytokine_key_map, "__dict__"):
         cytokine_key_map = dict(cytokine_key_map.__dict__)
     adata = annotate_mitochondrial_genes(adata, mito_prefix=getattr(data_cfg, "mito_prefix", "MT-"))

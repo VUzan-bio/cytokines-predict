@@ -8,6 +8,13 @@ import pandas as pd
 from scipy.stats import pearsonr
 
 
+def _select_expression(adata: anndata.AnnData, prefer_layer: str = "normalized"):
+    """Return expression matrix, preferring a specific layer for scale alignment."""
+    if prefer_layer and prefer_layer in adata.layers:
+        return adata.layers[prefer_layer]
+    return adata.X
+
+
 def compute_gene_level_agreement(
     adata_real: anndata.AnnData,
     adata_virtual: anndata.AnnData,
@@ -15,7 +22,7 @@ def compute_gene_level_agreement(
     target_cytokine: str = "IL-6",
     eps: float = 1e-6,
 ) -> pd.DataFrame:
-    """Compare real vs virtual expression per gene for a cell type."""
+    """Compare real vs virtual expression per gene for a cell type on the same scale."""
     real_mask = (adata_real.obs.get("cell_type") == cell_type) & (
         adata_real.obs.get("cytokine_type") == target_cytokine
     )
@@ -27,8 +34,10 @@ def compute_gene_level_agreement(
     if real.n_obs == 0 or virt.n_obs == 0:
         raise ValueError(f"No cells for cell_type={cell_type}")
 
-    real_mean = np.asarray(real.X.mean(axis=0)).ravel()
-    virt_mean = np.asarray(virt.X.mean(axis=0)).ravel()
+    real_expr = _select_expression(real, prefer_layer="normalized")
+    virt_expr = _select_expression(virt, prefer_layer="normalized")
+    real_mean = np.asarray(real_expr.mean(axis=0)).ravel()
+    virt_mean = np.asarray(virt_expr.mean(axis=0)).ravel()
     logfc = np.log2((virt_mean + eps) / (real_mean + eps))
 
     # Optional correlation if same number of cells
@@ -40,8 +49,8 @@ def compute_gene_level_agreement(
             continue
         try:
             r, _ = pearsonr(
-                np.asarray(real.X[:min_cells, gene_idx]).ravel(),
-                np.asarray(virt.X[:min_cells, gene_idx]).ravel(),
+                np.asarray(real_expr[:min_cells, gene_idx]).ravel(),
+                np.asarray(virt_expr[:min_cells, gene_idx]).ravel(),
             )
         except Exception:
             r = np.nan

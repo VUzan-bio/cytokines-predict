@@ -26,7 +26,7 @@ Pipeline to build a cytokine response dictionary using scVI as the sole modeling
 
 ## What you get
 - Memory-efficient preprocessing (mitochondrial filtering, lightweight doublet detection, HVG selection).
-- scVI model configured with cytokine covariates (type, concentration, duration) and donor batches.
+- scVI model configured with cytokine covariates (cytokine_type, cytokine_concentration, stimulation_duration) and donor batches.
 - Training tuned for laptops (CPU-only, small hidden size, early stopping).
 - Evaluation: ARI/NMI, silhouette by cytokine, reconstruction error, batch-mixing entropy, expression recovery.
 - Interpretation: DE contrasts (stimulated vs control), latent traversals, gene loadings, pseudotime.

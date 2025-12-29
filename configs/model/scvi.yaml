@@ -24,6 +24,6 @@ data:
   doublet_score_threshold: 0.25
   donor_key: donor_id
   cytokine_keys:
-    type: cytokine_type
-    concentration: concentration
-    duration: stimulation_duration
+    cytokine_type: cytokine_type
+    cytokine_concentration: cytokine_concentration
+    stimulation_duration: stimulation_duration

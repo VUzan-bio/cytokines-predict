@@ -7,7 +7,7 @@
 - Priors: standard normal on `z_n`, log-normal on `l_n`; KL annealed over `kl_warmup_epochs` for stable training.
 
 ## Cytokine covariates
-- `cytokine_type`, `concentration`, `stimulation_duration` encoded as categorical covariates in `setup_anndata`.
+- `cytokine_type`, `cytokine_concentration`, `stimulation_duration` encoded as categorical covariates in `setup_anndata`.
 - `donor_id` used as `batch_key` to learn shared cytokine manifolds while correcting donor effects.
 - Layers: `counts` (raw), `normalized` (library-size normalized), `log1p` (log-transformed working matrix).
 

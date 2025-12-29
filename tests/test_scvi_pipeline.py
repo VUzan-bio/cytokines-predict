@@ -36,7 +36,7 @@ def _config():
             donor_key="donor_id",
             cytokine_keys=SimpleNamespace(
                 cytokine_type="cytokine_type",
-                concentration="concentration",
+                cytokine_concentration="cytokine_concentration",
                 stimulation_duration="stimulation_duration",
             ),
         ),
@@ -50,7 +50,7 @@ def create_test_adata(n_cells: int = 128, n_genes: int = 300) -> sc.AnnData:
     adata.var_names = [f"GENE{i}" for i in range(n_genes - 2)] + ["MT-ND1", "MT-CO1"]
     adata.obs["donor_id"] = rng.choice(["D1", "D2", "D3"], size=n_cells)
     adata.obs["cytokine_type"] = rng.choice(["control", "stimulated"], size=n_cells)
-    adata.obs["concentration"] = rng.choice(["low", "high"], size=n_cells)
+    adata.obs["cytokine_concentration"] = rng.choice(["low", "high"], size=n_cells)
     adata.obs["stimulation_duration"] = rng.choice(["1h", "6h"], size=n_cells)
     adata.obs["cell_type"] = rng.choice(["T", "B"], size=n_cells)
     return adata
